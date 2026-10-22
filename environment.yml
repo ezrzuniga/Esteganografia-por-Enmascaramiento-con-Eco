@@ -7,6 +7,7 @@ name: pds-proyecto1
 channels:
   - conda-forge
 dependencies:
+ # Python (prototipo)
   - python=3.12
   - numpy
   - scipy             # scipy.io.wavfile: lectura/escritura de WAV
@@ -15,3 +16,9 @@ dependencies:
   - jupyterlab        # opcional, si se quiere usar fuera de VS Code
   - nbconvert         # opcional: exportar/ejecutar el cuaderno desde terminal
   - nbclient
+  # C++ (implementación)
+  - gxx=15        # g++ de conda-forge (versión fija, igual para todo el equipo)
+  - make
+  - pkg-config
+  - fftw              # FFT
+  - libsndfile        # lectura/escritura WAV
