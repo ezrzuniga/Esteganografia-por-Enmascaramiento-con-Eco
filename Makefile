@@ -20,7 +20,7 @@ CPPFLAGS += -Icpp/include -MMD -MP
 
 BUILD := cpp/build
 BIN   := $(BUILD)/echo_hiding
-SRC   := cpp/main.cpp $(wildcard cpp/src/*.cpp)
+SRC   := $(wildcard cpp/src/*.cpp)
 OBJ   := $(patsubst cpp/%.cpp,$(BUILD)/%.o,$(SRC))
 STAMP := $(BUILD)/.env-stamp
 
