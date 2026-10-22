@@ -1,4 +1,4 @@
-\documentclass[conference]{IEEEtran}
+\documentclass[journal]{IEEEtran}
 \usepackage[spanish]{babel}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
@@ -7,47 +7,55 @@
 \usepackage{cite}
 \usepackage{url}
 \usepackage[hidelinks]{hyperref}
+ 
 
-\title{Título del Proyecto}
-
-\author{
-\IEEEauthorblockN{Jose Zuñiga \\ David Duarte}
-\IEEEauthorblockA{Escuela de Ingeniería en Electronica\\
-Carrera de Maestría en Electrónica\\
-Procesamiento Digital de Señales\\
-Correo electrónico: \{jose.zuniga, david.duarte\}@estudiantec.cr}
-}
-
+\addto\captionsspanish{\renewcommand{\abstractname}{Abstract}}
+\renewcommand{\IEEEkeywordsname}{Palabras clave}
+ 
 \begin{document}
-
+ 
+\title{Esteganografía por Enmascaramiento con Eco}
+ 
+\author{Nasser~Brown, David~Duarte y Jose~Zúñiga%
+\thanks{N.Brown, D. Duarte y J. Zuñiga son estudiantes de la Maestría en Electrónica,
+Escuela de Ingeniería Electrónica, curso de Procesamiento Digital de Señales
+(correo electrónico: nasserbrown@estudiantec.cr; davidduarte@estudiantec.cr; je.zuniga@estudiantec.cr).}}
+ 
+\markboth{Procesamiento Digital de Señales, Maestría en Electrónica}%
+{Brown, Duarte y Zúñiga: Esteganografía por Enmascaramiento con Eco}
+ 
 \maketitle
-
+ 
 \begin{abstract}
-Este documento presenta la estructura base del artículo científico del proyecto, siguiendo el formato de IEEE Transactions. Se incluye una versión resumida del contenido requerido en la sección de formato, además de una base para continuar con la redacción del trabajo final.
+This paper presents the design, implementation, and evaluation of the project.
+A summary of the problem, the proposed method, the main results, and the
+conclusions should be written here in English.
 \end{abstract}
-
-\section{Formato}
-El diseño, la implementación y los resultados del proyecto se deben resumir en un artículo científico. Éste se apegará al formato de la IEEE Transactions cuyas especificaciones y plantilla se puede encontrar en [5].
-
-\begin{itemize}
-    \item[] \textbf{A1.} El artículo científico será escrito en LATEX.
-    \item[] \textbf{A2.} El artículo científico seguirá el formato de IEEE Transactions (contenido y forma).
-    \item[] \textbf{A3.} El artículo científico tendrá una extensión no mayor a 4 páginas.
-\end{itemize}
-
+ 
+\begin{IEEEkeywords}
+Autocorrelación del cepstro, Convolución, Enmascaramiento con eco,
+Esteganografía de audio, Solapamiento y suma.
+\end{IEEEkeywords}
+ 
 \section{Introducción}
-En esta sección se debe describir el problema de investigación, la motivación del proyecto, los objetivos generales y específicos, así como el alcance del trabajo.
-
+\IEEEPARstart{E}{n} esta sección se debe describir el problema de investigación,
+la motivación del proyecto, los objetivos generales y específicos, así como el
+alcance del trabajo. El ocultamiento de información mediante eco fue propuesto
+originalmente en \cite{gruhl1996echo,bender1996techniques}.
+ 
 \section{Metodología}
-Se describe el enfoque metodológico, la arquitectura del sistema, las herramientas utilizadas, los datos de entrada y el procedimiento experimental.
-
+Se describe el enfoque metodológico, la arquitectura del sistema, las
+herramientas utilizadas, los datos de entrada y el procedimiento experimental.
+ 
 \section{Resultados y Discusión}
-Se presentan los hallazgos principales, las métricas de evaluación y la comparación con soluciones previas o referentes del estado del arte.
-
+Se presentan los hallazgos principales, las métricas de evaluación y la
+comparación con soluciones previas o referentes del estado del arte.
+ 
 \section{Conclusiones}
-Se sintetizan los principales logros, limitaciones y propuestas de trabajo futuro.
-
+Se sintetizan los principales logros, limitaciones y propuestas de trabajo
+futuro.
+ 
 \bibliographystyle{IEEEtran}
 \bibliography{referencias}
-
+ 
 \end{document}
