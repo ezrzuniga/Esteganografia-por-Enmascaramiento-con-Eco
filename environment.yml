@@ -1,0 +1,17 @@
+# Entorno de trabajo del proyecto 1 — Procesamiento Digital de Señales.
+#
+#   mamba env create -f environment.yml      (o: conda env create -f environment.yml)
+#   conda activate pds-proyecto1
+#
+name: pds-proyecto1
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - numpy
+  - scipy             # scipy.io.wavfile: lectura/escritura de WAV
+  - matplotlib
+  - ipykernel         # kernel para ejecutar el cuaderno (VS Code / Jupyter)
+  - jupyterlab        # opcional, si se quiere usar fuera de VS Code
+  - nbconvert         # opcional: exportar/ejecutar el cuaderno desde terminal
+  - nbclient
