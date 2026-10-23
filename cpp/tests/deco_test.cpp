@@ -5,13 +5,13 @@
 //Proyecto 1
 // deco_demo.cpp
 // Testbench de deco/*
-// para construir ejecutar en terminal:  g++ -std=c++17 -O2 deco_demo.cpp -o deco_demo
+// Compilar desde la raiz del repo:  g++ -std=c++17 -O2 -Icpp/include cpp/tests/deco_test.cpp -o deco_test
 
 #include <cstdio>
 #include <cmath>
 #include <random>
 
-#include "deco.hpp"
+#include "deco/decode.hpp"
 
 int main() {
     const deco::Indices d = {40, 55, 70, 90};

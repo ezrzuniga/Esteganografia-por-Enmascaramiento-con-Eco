@@ -2,6 +2,7 @@
 Proyecto 1 - Curso procesamiento digital de señales
 
 ## Integrantes
+- Nasser Brown
 - David Duarte
 - Jose Eduardo Zuniga Ramirez
 

@@ -32,6 +32,9 @@ inline Signal rcc(const Signal& v_in) {
     Real acc = 0.0;
     for (Real x : v_in) acc += x * x;
     const Real rms = std::sqrt(acc / static_cast<Real>(N));
+    // Ventana en silencio digital: no hay eco que detectar. Se devuelve R_cc nula para que classify dé z = 0
+    // (bit 0, sin eco) como el prototipo, en lugar de amplificar el ruido de redondeo de la FFT.
+    if (rms == 0.0) return Signal(N, 0.0);
     const Real gain = kScale / (rms + kEps);
 
     //Paso 2
