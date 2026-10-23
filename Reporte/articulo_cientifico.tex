@@ -1,5 +1,5 @@
 \documentclass[journal]{IEEEtran}
-\usepackage[spanish]{babel}
+\usepackage[spanish,es-nodecimaldot]{babel}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{amsmath,amssymb,amsfonts}
@@ -8,52 +8,96 @@
 \usepackage{cite}
 \usepackage{url}
 \usepackage[hidelinks]{hyperref}
- 
+
 \graphicspath{{images/}}
 \addto\captionsspanish{\renewcommand{\abstractname}{Abstract}}
 \addto\captionsspanish{\renewcommand{\tablename}{Tabla}}
 \renewcommand{\IEEEkeywordsname}{Palabras clave}
- 
+
 \begin{document}
- 
+
 \title{Esteganografía por Enmascaramiento con Eco}
- 
+
 \author{Nasser~Brown, David~Duarte y Jose~Zúñiga%
-\thanks{N.Brown, D. Duarte y J. Zuñiga son estudiantes de la Maestría en Electrónica,
+\thanks{N. Brown, D. Duarte y J. Zúñiga son estudiantes de la Maestría en Electrónica,
 Escuela de Ingeniería Electrónica, curso de Procesamiento Digital de Señales
 (correo electrónico: nasserbrown@estudiantec.cr; davidduarte@estudiantec.cr; je.zuniga@estudiantec.cr).}}
- 
+
 \markboth{Procesamiento Digital de Señales, Maestría en Electrónica}%
 {Brown, Duarte y Zúñiga: Esteganografía por Enmascaramiento con Eco}
- 
+
 \maketitle
- 
+
 \begin{abstract}
-This paper presents the design, implementation, and evaluation of the project.
-A summary of the problem, the proposed method, the main results, and the
-conclusions should be written here in English.
+This paper presents an echo-hiding system that embeds song metadata (title,
+artist, author, album, year, guest artist and producer) into CD-quality audio.
+Each window of the signal is convolved with one of two echo kernels,
+$h_b(n)=\delta(n)+a_b\,\delta(n-t_b)$, and the windows, which overlap with
+$\sin^2$ crossfades, are joined by overlap-add. The decoder computes the
+cepstrum autocorrelation in the spectral domain and decides, for every window,
+whether it carries a zero, a one or no echo at all. The system was evaluated on
+six 30-second tracks, namely synthetic music, rock, modern piano, classical
+piano, electronic music and speech. The default parameters ($t_0=1$~ms,
+$t_1=1.5$~ms, $a_0=a_1=40$~\% and a window of ten times the longest delay, or
+66.8~bit/s) give the shortest window that keeps PESQ above 4.0 and recovery
+above 95~\% on every track. With them, the bit recovery rate was between 96.4
+and 100~\% and PESQ was between 4.29 and 4.52 (PESQ could not evaluate the
+rock track). The crossfade raised PESQ by up to 1.9 points over abrupt kernel
+switching. Recovery and PESQ are negatively correlated ($r=-0.66$), as are
+transfer rate and PESQ ($r=-0.77$).
 \end{abstract}
- 
+
 \begin{IEEEkeywords}
 Autocorrelación del cepstro, Convolución, Enmascaramiento con eco,
 Esteganografía de audio, Solapamiento y suma.
 \end{IEEEkeywords}
- 
+
 % ----------------------------------------------------------------------------------------------------------------
 
 \section{Introducción}
-\IEEEPARstart{E}{n} esta sección se debe describir el problema de investigación,
-la motivación del proyecto, los objetivos generales y específicos, así como el
-alcance del trabajo. El ocultamiento de información mediante eco fue propuesto
-originalmente en \cite{gruhl1996echo}.
- 
+\IEEEPARstart{L}{a} esteganografía es una técnica que oculta un mensaje dentro
+de una señal portadora, aprovechando las limitaciones de la percepción humana
+para que el mensaje pase inadvertido. En audio, sus aplicaciones incluyen la
+protección contra la piratería, las restricciones geográficas de contenido y la
+adición de metadatos \cite{dutta2009review,kaur2014survey}. Entre las técnicas
+conocidas están la codificación de bit, el espectro disperso, la codificación de
+fase y el enmascaramiento con eco \cite{dutta2009review,kaur2014survey}.
+
+El enmascaramiento con eco fue propuesto por Gruhl, Lu y Bender
+\cite{gruhl1996echo}. La idea es agregar a cada segmento del audio un eco cuyo
+retardo depende del bit que se quiere ocultar. Si el retardo es de alrededor de
+un milisegundo, el oído no distingue el eco como una repetición, sino que lo
+percibe como una ligera coloración del sonido, parecida a la que agrega una
+sala. Los autores reportaron tasas típicas de 16~bit/s y una tasa de
+recuperación de al menos 85~\% con amplitudes de eco entre 0.3 y 0.85 veces la
+señal original. También observaron que el caso más difícil es el habla con
+pausas, porque en el silencio no hay señal que transporte el eco. Trabajos
+posteriores han buscado reducir la probabilidad de error de esta técnica
+\cite{korzhik2013zero}.
+
+Este trabajo implementa un sistema que oculta los metadatos de una canción
+(título, artista, autor, álbum, año, artista invitado y productor) en un
+archivo de audio con calidad de disco compacto. El sistema se construye con
+sistemas lineales e invariantes en el tiempo (LTI, por sus siglas en inglés).
+El codificador usa la convolución y el solapamiento y suma, y el decodificador
+usa la autocorrelación del cepstro. El prototipo se desarrolló en Python y la
+implementación final en C++, que produce las mismas muestras codificadas y los
+mismos bits decodificados que el prototipo. Los resultados que se presentan se
+obtuvieron con el prototipo. Además, se caracterizó el sistema con distintas amplitudes de eco,
+tasas de transferencia y géneros musicales.
+
+El documento está organizado de la siguiente manera. La
+Sección~\ref{sec:teoria} presenta la teoría necesaria, la
+Sección~\ref{sec:sistema} describe cada módulo del sistema, la
+Sección~\ref{sec:resultados} presenta y discute los resultados, y la
+Sección~\ref{sec:conclusiones} resume las conclusiones y el trabajo futuro.
 
 % ----------------------------------------------------------------------------------------------------------------
 
 \section{Marco teórico}\label{sec:teoria}
 
 \subsection{Núcleos de eco y convolución}
-Cada bit b de valor entre 0 y 1 se codifica con el sistema LTI de la ecuación~\eqref{eq:h}:
+Cada bit b de valor entre 0 y 1 se codifica con el sistema LTI de la Ecuación~\eqref{eq:h}:
 \begin{equation}\label{eq:h}
 H_b(z)=1+a_b z^{-t_b},\qquad h_b(n)=\delta(n)+a_b\,\delta(n-t_b),
 \end{equation}
@@ -64,15 +108,18 @@ dificultar la decodificación, además las amplitudes altas facilitan la decodif
 pero el eco puede volverse perceptible \cite{gruhl1996echo}.
 
 \subsection{Solapamiento y suma}
-La señal $x(n)$ se segmenta en ventanas $v_k(n)$ de longitud $L$. Al
-convolucionar una ventana con una respuesta al impulso de longitud $N=t_b+1$,
-el resultado tiene longitud $L+N-1$. Si el excedente de $N-1$ muestras no se
-toma en cuenta, se inducen componentes espectrales parásitas que distorsionan
-el audio y corrompen los metadatos. En el solapamiento y suma, ese excedente se
-suma al inicio de la siguiente ventana como describe la ecuación~\eqref{eq:ola}:
+La señal $x(n)$ se segmenta en ventanas $v_k(n)=w_k(n)\,x(n)$ separadas $L$
+muestras, donde las funciones $w_k$ se traslapan y cumplen
+$\sum_k w_k(n)=1$. Al convolucionar una ventana con una respuesta al impulso de
+longitud $N=t_b+1$, el resultado se alarga $N-1$ muestras. Si ese excedente no
+se toma en cuenta, se inducen componentes espectrales parásitas que distorsionan
+el audio y corrompen los metadatos. En el solapamiento y suma, los excedentes y
+los traslapes se suman como describe la Ecuación~\eqref{eq:ola}:
 \begin{equation}\label{eq:ola}
-y(n)=\sum_{k}\left(v_k*h_{b_k}\right)(n-kL).
+y(n)=\sum_{k}\left(v_k*h_{b_k}\right)(n).
 \end{equation}
+Si todas las ventanas usan el mismo núcleo, \eqref{eq:ola} equivale a convolucionar
+la señal completa, porque las $w_k$ suman uno.
 
 
 \subsection{Autocorrelación del cepstro}
@@ -109,8 +156,8 @@ defecto).
 
 \begin{figure}[!t]
 \centering
-\includegraphics[width=0.75\columnwidth]{diagrama.png}
-\caption{Diagrama general del sistema: codificador (arriba) y decodificador (abajo).}
+\includegraphics[width=0.62\columnwidth]{diagrama.png}
+\caption{Diagrama general del sistema, con el codificador arriba y el decodificador abajo.}
 \label{fig:bloques}
 \end{figure}
 
@@ -125,27 +172,31 @@ Parámetro & Valor & Equivalente \\
 Retardo del bit 0, $t_0$ & 1000~µs & 44 muestras \\
 Retardo del bit 1, $t_1$ & 1500~µs & 66 muestras \\
 Amplitudes $a_0$, $a_1$ & 40~\% & 0.4 \\
-Ventana, $L=16\,t_{\max}$ & 1056 muestras & 23.9~ms \\
-Tasa de transferencia, $f_s/L$ & 41.8~bit/s & --- \\
+Ventana, $L=10\,t_{\max}$ & 660 muestras & 15.0~ms \\
+Fundido entre núcleos & $L$ muestras & $\sin^2$ \\
+Tasa de transferencia, $f_s/L$ & 66.8~bit/s & --- \\
 Umbral de eco, $\theta$ & 3.0 & --- \\
-Ventanas sin eco de cierre, $G$ & 8 & 191~ms \\
+Ventanas sin eco de cierre, $G$ & 13 & 195~ms \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \subsection{Codificador}
-Los retardos se convierten de microsegundos a muestras con
-$t_b=\operatorname{round}(t_b^{\mu s} f_s/10^6)$. El tamaño de ventana depende
-solo del mayor retardo, $L=16\,t_{\max}$, y es el mismo en ambos subsistemas.
+Los retardos, dados en microsegundos, se convierten a muestras multiplicando por
+$f_s$ y redondeando al entero más cercano. El tamaño de ventana depende
+solo del mayor retardo, $L=10\,t_{\max}$, y es el mismo en ambos subsistemas;
+la Sección~\ref{sec:discusion} justifica el factor. Cada $w_k$ sube con una
+rampa $\sin^2$ de $L$ muestras centrada en $kL$ y baja con una rampa $\cos^2$
+centrada en $(k+1)L$, de modo que el núcleo cambia de forma gradual entre bits.
 Cada ventana se convoluciona explícitamente con el núcleo de su bit y se combina
-con~\eqref{eq:ola}, las ventanas posteriores al mensaje se copian sin eco. La
-salida se redondea y se satura al intervalo de 16~bits. 
+con~\eqref{eq:ola}, y las ventanas posteriores al mensaje se copian sin eco. La
+salida se redondea y se satura al intervalo de 16~bits.
 
 \subsection{Decodificador}
 Para cada ventana se evalúa $R_{cc}$ con~\eqref{eq:rcc} en el dominio
-espectral. En la implementación se usa la magnitud del espectro y se omite la fase, 
-por lo que se puede utilizar un logaritmo con números reales en lugar de complejos. 
-Antes de transformar, la ventana se escala a un nivel fijo
+espectral. En la implementación se usa la magnitud del espectro y se omite la fase,
+por lo que se puede utilizar un logaritmo con números reales en lugar de complejos.
+Antes de transformar, la ventana se escala a un valor eficaz de $2^{15}$
 para que la altura de $R_{cc}$ sea comparable entre ventanas de distinto
 volumen, se multiplica por una ventana de Hann y se suma una constante
 $\varepsilon=10^{-12}$ dentro del logaritmo para evitar $\ln 0$.
@@ -161,34 +212,207 @@ de las desviaciones absolutas respecto a $\tilde\mu$. Si $\max_b z_b<\theta$,
 la ventana se clasifica como no codificada.
 
 \subsection{Protocolo de datos y notificación}
-Los metadatos se serializan como texto UTF-8 con líneas
+Los metadatos se serializan como texto en formato de transformación de Unicode
+de 8~bits (UTF-8, por sus siglas en inglés) con líneas
 \emph{clave}$=$\emph{valor}, y cada byte se transmite empezando por el bit más
-significativo. El fin del mensaje se detecta en la primera racha de $G=8$
-ventanas consecutivas sin eco. El intérprete agrupa los bits en bytes, separa
+significativo. El fin del mensaje se detecta en la primera racha de $G=13$
+ventanas consecutivas sin eco (195~ms). El intérprete agrupa los bits en bytes, separa
 las líneas y busca cada clave en la tabla de categorías, las reconocidas se
 imprimen en la salida estándar con su categoría y las desconocidas en la salida
 de error con una advertencia.
- 
+
 
 % ----------------------------------------------------------------------------------------------------------------
 
-\section{Resultados y Discusión}\label{sec:resultados}
-Para la evaluación del sistema se usaron cuatro pistas: una pieza sintética de 30~s 
-(notas armónicas con ruido de percusión), y fragmentos de rock independiente, 
-piano moderno y voz narrada, convertidos a 44.1~kHz y 16~bits. En todas se 
-codificaron los siete metadatos más una clave desconocida (101~bytes, 808~bits, 19.3~s).
- 
+\section{Resultados y discusión}\label{sec:resultados}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.3\textwidth]{todas/respuesta_al_impulso.png}\hfill
+\includegraphics[width=0.3\textwidth]{todas/ventana0.png}\hfill
+\includegraphics[width=0.3\textwidth]{todas/ventana1.png}
+\caption{Respuestas al impulso de los núcleos (izquierda) y autocorrelación del
+cepstro de una ventana codificada con un 0 (centro) y con un 1 (derecha) en
+cada pista, expresada como puntuación $z$. Las líneas discontinuas marcan $t_0$
+y $t_1$, y la línea punteada marca el umbral $\theta=3$.}
+\label{fig:rcc}
+\end{figure*}
+
+\subsection{Procedimiento experimental}
+Se usaron seis pistas de 30~s con géneros de características distintas, una
+pieza sintética formada por notas armónicas y ruido de percusión, y fragmentos
+de rock independiente, piano moderno, piano clásico, música electrónica y voz
+narrada, todos en el formato del sistema. Cada pista tiene 2004 ventanas con la
+configuración por defecto. En la prueba de extremo a extremo se codificaron los
+siete metadatos y una clave desconocida, en total 122~bytes (976~bits o
+14.6~s), de modo que las 1028 ventanas finales quedan sin eco.
+
+Además se hicieron dos barridos con bits aleatorios, uno de la amplitud entre 5
+y 50~\% con la tasa por defecto, y otro del tamaño de ventana entre
+$2\,t_{\max}$ y $32\,t_{\max}$ con 40~\% de amplitud, es decir, tasas entre
+20.9 y 334~bit/s. Cada punto se repitió tres veces y se reporta la mediana.
+Para PESQ, ambas señales se remuestrearon a 16~kHz y se compararon en modo de
+banda ancha. La relación entre métricas se resume con el coeficiente de
+correlación de Pearson, $r$.
+
+\subsection{Autocorrelación del cepstro}
+La Fig.~\ref{fig:rcc} muestra los núcleos y la $R_{cc}$ de una ventana
+codificada con cada bit, expresada como la puntuación $z$ de~\eqref{eq:z} para
+poder comparar las pistas. Se eligió la ventana de mayor energía de cada pista.
+En la pieza sintética, el rock, el piano clásico y la electrónica, el pico en
+el retardo del bit codificado supera el umbral $\theta=3$, con puntuaciones
+entre 4.0 y 16.6, lo que confirma que $R_{cc}$ destaca el retardo del eco. En
+el piano moderno y en la voz, las ventanas elegidas quedan bajo el umbral ($z$
+entre $-0.1$ y 2.7), por lo que se marcan como no codificadas. En las pistas
+con notas sostenidas aparecen otros picos, cerca de 98~muestras en el piano
+moderno y 102 en la pieza sintética. Provienen de la estructura periódica de la música y, aunque no
+coinciden con $t_0$ ni $t_1$, elevan el nivel de referencia y hacen que el eco
+destaque menos.
+
+\subsection{Prueba de extremo a extremo}
+La Tabla~\ref{tab:e2e} resume la decodificación con los parámetros por defecto.
+La tasa de recuperación fue de al menos 96.4~\% en todas las pistas, por encima
+del mínimo de 90~\%, y PESQ, calculado sobre la pista completa, quedó entre
+4.29 y 4.52.
+
+\begin{table}[!t]
+\centering
+\caption{Resultados de extremo a extremo con los parámetros por defecto}
+\label{tab:e2e}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lrrrrcc}
+\toprule
+Pista & Recup. & Errores & Eco det. & Falso eco & Metadatos & PESQ \\
+ & (\%) & (bits) & (\%) & (\%) & correctos & \\
+\midrule
+Sintética     & 100.0 & 0  & 99.9  & 1.8  & 7/7 & 4.29 \\
+Rock          &  99.8 & 2  & 99.5  & 6.8  & 5/7 & ---  \\
+Piano moderno &  99.3 & 7  & 88.8  & 0.8  & 3/7 & 4.44 \\
+Piano clásico &  99.7 & 3  & 100.0 & 8.2  & 6/7 & 4.47 \\
+Electrónica   &  99.8 & 2  & 98.9  & 24.2 & 5/7 & 4.52 \\
+Voz           &  96.4 & 35 & 88.8  & 10.0 & 0/7 & 4.50 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Las fallas se deben sobre todo a la interpretación del mensaje y no a la
+clasificación de bits. Solo la pieza sintética recuperó los siete metadatos; en
+las demás pistas, de 2 a 7 bits erróneos dañaron entre uno y cuatro campos, como
+en la electrónica, donde \emph{title} se convirtió en \emph{tit,e} y se reportó
+como desconocida. En la voz, los 35 errores dañaron todos los campos, lo que
+coincide con lo reportado por Gruhl \emph{et al.} para el habla con pausas
+\cite{gruhl1996echo}. El falso eco fue bajo, salvo en la electrónica con
+24.2~\%, posiblemente por su contenido rítmico repetitivo, y la saturación fue
+despreciable, con 207 muestras (0.016~\%) en el rock.
+
+\subsection{Amplitud del eco}
+Según la Fig.~\ref{fig:amp}, la tasa de recuperación crece con la amplitud,
+porque un eco más fuerte produce un pico más alto en $R_{cc}$. El 90~\% se
+alcanza con 20~\% de amplitud en la pieza sintética, el rock, el piano clásico
+y la electrónica, y con 30~\% en el piano moderno y la voz. Gruhl \emph{et al.} necesitaron entre 30 y 50~\% para alcanzar
+85~\% \cite{gruhl1996echo}, aunque sus pruebas incluyeron compresión y
+transmisión analógica.
+
+PESQ se comporta de forma opuesta. Con 5~\% está entre 4.63 y 4.64, el máximo
+de la escala, y con 40~\% baja a valores entre 4.05 (pieza sintética) y 4.46
+(electrónica). La pieza sintética es la que más se degrada, posiblemente porque
+sus notas puras hacen más evidente la coloración del eco. Como análisis adicional se calculó la
+relación señal a ruido (SNR, por sus siglas en inglés), tomando como ruido la
+diferencia entre la señal codificada y la original. Las seis curvas coinciden,
+de 26~dB con 5~\% a 6~dB con 50~\%, porque esa diferencia es el propio eco, una
+copia atenuada de la señal. La SNR no refleja la percepción, mientras que PESQ
+sí distingue entre pistas.
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.3\textwidth]{todas/recuperacion_vs_amplitud.png}\hfill
+\includegraphics[width=0.3\textwidth]{todas/PESQ_vs_amplitud.png}\hfill
+\includegraphics[width=0.3\textwidth]{todas/snr_vs_ampitud.png}
+\caption{Efecto de la amplitud del eco a 66.8~bit/s en la tasa de recuperación
+(izquierda), en PESQ (centro) y en la SNR (derecha). La línea punteada marca el
+90~\% de recuperación.}
+\label{fig:amp}
+\end{figure*}
+
+\subsection{Tasa de transferencia}
+En la Fig.~\ref{fig:tasa}, la tasa de recuperación se mantiene en al menos
+95.1~\% hasta 111.4~bit/s, baja a valores entre 91.6 y 98.2~\% a 167~bit/s y
+queda entre 69.0 y 82.8~\% a 334~bit/s, porque con ventanas más cortas cada bit
+se decide con menos muestras. PESQ también baja, de valores entre 4.50 y 4.57 a
+20.9~bit/s a valores entre 1.55 y 3.92 a 334~bit/s, porque con ventanas cortas
+el núcleo cambia con más frecuencia y el fundido, que dura una ventana, es más
+rápido.
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.3\textwidth]{todas/recuperacion_vs_tasa.png}\hfill
+\includegraphics[width=0.3\textwidth]{todas/PESQ_vs_tasa.png}\hfill
+\includegraphics[width=0.3\textwidth]{todas/PESQ_vs_recuperacion.png}
+\caption{Tasa de recuperación (izquierda) y PESQ (centro) en función de la tasa
+de transferencia con 40~\% de amplitud, y relación entre PESQ y la tasa de
+recuperación en el barrido de amplitud (derecha).}
+\label{fig:tasa}
+\end{figure*}
+
+\subsection{Correlación entre las métricas}
+La tasa de recuperación y PESQ tienen una correlación negativa (gráfica derecha
+de la Fig.~\ref{fig:tasa}), con $r=-0.66$ en conjunto y entre $-0.68$ y
+$-0.85$ dentro de cada pista. Es decir, lo que hace más robusto al sistema
+también hace más audible el eco. La tasa de transferencia se correlaciona
+negativamente con PESQ ($r=-0.77$ en conjunto y entre $-0.93$ y $-0.99$ por
+pista) y con la tasa de recuperación ($r=-0.91$), así que aumentar la tasa
+empeora ambas.
+
+\subsection{Discusión}\label{sec:discusion}
+Los resultados confirman que no es posible mejorar al mismo tiempo la robustez,
+la tasa y la calidad, y que cada género ubica ese compromiso en un punto
+distinto. Por eso los valores por defecto se eligieron con un barrido de la
+amplitud (15 a 45~\%), del factor de ventana (6 a 16) y del fundido (ninguno,
+$L/2$ y $L$), con dos realizaciones de bits aleatorios, buscando la ventana más
+corta que mantenga PESQ~$\geq 4.0$ (señal perceptualmente indistinguible) y al
+menos 95~\% de recuperación en todas las pistas, un margen sobre el mínimo de
+90~\%. El óptimo fue 40~\% con $L=10\,t_{\max}$ y fundido completo, con PESQ
+entre 4.08 y 4.47 y recuperación mínima de 96.7~\%; con $9\,t_{\max}$ PESQ baja
+a 3.89, y con menos amplitud la voz no alcanza el 95~\%. El fundido fue decisivo:
+con los mismos parámetros y cambio abrupto de núcleo PESQ queda entre 2.20 y
+3.76, con igual recuperación.
+
+Por último, PESQ está diseñado para voz, analiza
+solo hasta 8~kHz y no pudo evaluar el rock, porque su detector de actividad no
+encontró segmentos válidos. Sus valores sirven para comparar configuraciones,
+pero no como medida absoluta de calidad musical.
 
 % ----------------------------------------------------------------------------------------------------------------
 
-\section{Conclusiones}
-Se sintetizan los principales logros, limitaciones y propuestas de trabajo
-futuro.
- 
+\section{Conclusiones}\label{sec:conclusiones}
+La autocorrelación del cepstro, evaluada en el dominio espectral, destacó el
+retardo del eco, y con los parámetros por defecto la tasa de recuperación fue
+de 96.4 a 100~\%, por encima del mínimo de 90~\%.
+
+El fundido entre núcleos elevó PESQ de valores entre 2.20 y 3.76 a valores
+entre 4.08 y 4.47 sin afectar la recuperación, lo que permitió usar la ventana
+más corta, $10\,t_{\max}$, que cumple PESQ~$\geq 4.0$ y 95~\% de recuperación.
+
+La tasa de recuperación crece con la amplitud del eco y PESQ disminuye. Su
+correlación negativa ($r=-0.66$) muestra que la robustez se obtiene a costa de
+la calidad perceptual. La SNR, en cambio, depende solo de la amplitud y no sirve
+para evaluar la calidad perceptual.
+
+Aumentar la tasa de transferencia reduce la recuperación y PESQ. La
+recuperación se mantiene sobre 95~\% hasta 111.4~bit/s y cae con rapidez desde
+167~bit/s.
+
+El habla con pausas es el caso más difícil, y el protocolo de datos es el punto
+más débil, ya que un bit erróneo basta para perder un metadato completo.
+
+Como trabajo futuro se recomienda agregar un código corrector de errores, un
+encabezado con la longitud del mensaje, omitir las ventanas en silencio y
+confirmar la imperceptibilidad con pruebas de escucha.
 
 % ----------------------------------------------------------------------------------------------------------------
 
 \bibliographystyle{IEEEtran}
 \bibliography{referencias}
- 
+
 \end{document}

@@ -11,6 +11,7 @@ dependencies:
   - python=3.12
   - numpy
   - scipy             # scipy.io.wavfile: lectura/escritura de WAV
+  - pesq  
   - matplotlib
   - ipykernel         # kernel para ejecutar el cuaderno (VS Code / Jupyter)
   - jupyterlab        # opcional, si se quiere usar fuera de VS Code
