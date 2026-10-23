@@ -1,5 +1,5 @@
 \documentclass[journal]{IEEEtran}
-\usepackage[spanish]{babel}
+\usepackage[spanish,es-nodecimaldot]{babel}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{amsmath,amssymb,amsfonts}
@@ -19,7 +19,7 @@
 \title{Esteganografía por Enmascaramiento con Eco}
 
 \author{Nasser~Brown, David~Duarte y Jose~Zúñiga%
-\thanks{N.Brown, D. Duarte y J. Zuñiga son estudiantes de la Maestría en Electrónica,
+\thanks{N. Brown, D. Duarte y J. Zúñiga son estudiantes de la Maestría en Electrónica,
 Escuela de Ingeniería Electrónica, curso de Procesamiento Digital de Señales
 (correo electrónico: nasserbrown@estudiantec.cr; davidduarte@estudiantec.cr; je.zuniga@estudiantec.cr).}}
 
@@ -83,8 +83,9 @@ archivo de audio con calidad de disco compacto. El sistema se construye con
 sistemas lineales e invariantes en el tiempo (LTI, por sus siglas en inglés).
 El codificador usa la convolución y el solapamiento y suma, y el decodificador
 usa la autocorrelación del cepstro. El prototipo se desarrolló en Python y la
-implementación final en C++. Los resultados que se presentan se obtuvieron con
-el prototipo. Además, se caracterizó el sistema con distintas amplitudes de eco,
+implementación final en C++, que produce las mismas muestras codificadas y los
+mismos bits decodificados que el prototipo. Los resultados que se presentan se
+obtuvieron con el prototipo. Además, se caracterizó el sistema con distintas amplitudes de eco,
 tasas de transferencia y géneros musicales.
 
 El documento está organizado de la siguiente manera. La
@@ -98,7 +99,7 @@ Sección~\ref{sec:conclusiones} resume las conclusiones y el trabajo futuro.
 \section{Marco teórico}\label{sec:teoria}
 
 \subsection{Núcleos de eco y convolución}
-Cada bit b de valor entre 0 y 1 se codifica con el sistema LTI de la ecuación~\eqref{eq:h}:
+Cada bit b de valor entre 0 y 1 se codifica con el sistema LTI de la Ecuación~\eqref{eq:h}:
 \begin{equation}\label{eq:h}
 H_b(z)=1+a_b z^{-t_b},\qquad h_b(n)=\delta(n)+a_b\,\delta(n-t_b),
 \end{equation}
@@ -114,7 +115,7 @@ convolucionar una ventana con una respuesta al impulso de longitud $N=t_b+1$,
 el resultado tiene longitud $L+N-1$. Si el excedente de $N-1$ muestras no se
 toma en cuenta, se inducen componentes espectrales parásitas que distorsionan
 el audio y corrompen los metadatos. En el solapamiento y suma, ese excedente se
-suma al inicio de la siguiente ventana como describe la ecuación~\eqref{eq:ola}:
+suma al inicio de la siguiente ventana como describe la Ecuación~\eqref{eq:ola}:
 \begin{equation}\label{eq:ola}
 y(n)=\sum_{k}\left(v_k*h_{b_k}\right)(n-kL).
 \end{equation}
@@ -190,7 +191,7 @@ salida se redondea y se satura al intervalo de 16~bits.
 Para cada ventana se evalúa $R_{cc}$ con~\eqref{eq:rcc} en el dominio
 espectral. En la implementación se usa la magnitud del espectro y se omite la fase,
 por lo que se puede utilizar un logaritmo con números reales en lugar de complejos.
-Antes de transformar, la ventana se escala a un nivel fijo
+Antes de transformar, la ventana se escala a un valor eficaz de $2^{15}$
 para que la altura de $R_{cc}$ sea comparable entre ventanas de distinto
 volumen, se multiplica por una ventana de Hann y se suma una constante
 $\varepsilon=10^{-12}$ dentro del logaritmo para evitar $\ln 0$.
@@ -206,7 +207,8 @@ de las desviaciones absolutas respecto a $\tilde\mu$. Si $\max_b z_b<\theta$,
 la ventana se clasifica como no codificada.
 
 \subsection{Protocolo de datos y notificación}
-Los metadatos se serializan como texto UTF-8 con líneas
+Los metadatos se serializan como texto en formato de transformación de Unicode
+de 8~bits (UTF-8, por sus siglas en inglés) con líneas
 \emph{clave}$=$\emph{valor}, y cada byte se transmite empezando por el bit más
 significativo. El fin del mensaje se detecta en la primera racha de $G=8$
 ventanas consecutivas sin eco. El intérprete agrupa los bits en bytes, separa
@@ -218,6 +220,18 @@ de error con una advertencia.
 % ----------------------------------------------------------------------------------------------------------------
 
 \section{Resultados y discusión}\label{sec:resultados}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.3\textwidth]{todas/respuesta_al_impulso.png}\hfill
+\includegraphics[width=0.3\textwidth]{todas/ventana0.png}\hfill
+\includegraphics[width=0.3\textwidth]{todas/ventana1.png}
+\caption{Respuestas al impulso de los núcleos (izquierda) y autocorrelación del
+cepstro de una ventana codificada con un 0 (centro) y con un 1 (derecha) en
+cada pista, expresada como puntuación $z$. Las líneas discontinuas marcan $t_0$
+y $t_1$, y la línea punteada marca el umbral $\theta=3$.}
+\label{fig:rcc}
+\end{figure*}
 
 \subsection{Procedimiento experimental}
 Se usaron seis pistas de 30~s con géneros de características distintas, una
@@ -251,18 +265,6 @@ codificada. En las pistas con notas sostenidas aparecen otros picos, cerca de
 sintética. Provienen de la estructura periódica de la música y, aunque no
 coinciden con $t_0$ ni $t_1$, elevan el nivel de referencia y hacen que el eco
 destaque menos.
-
-\begin{figure*}[!t]
-\centering
-\includegraphics[width=0.3\textwidth]{todas/respuesta_al_impulso.png}\hfill
-\includegraphics[width=0.3\textwidth]{todas/ventana0.png}\hfill
-\includegraphics[width=0.3\textwidth]{todas/ventana1.png}
-\caption{Respuestas al impulso de los núcleos (izquierda) y autocorrelación del
-cepstro de una ventana codificada con un 0 (centro) y con un 1 (derecha) en
-cada pista, expresada como puntuación $z$. Las líneas discontinuas marcan $t_0$
-y $t_1$, y la línea punteada marca el umbral $\theta=3$.}
-\label{fig:rcc}
-\end{figure*}
 
 \subsection{Prueba de extremo a extremo}
 La Tabla~\ref{tab:e2e} resume la decodificación con los parámetros por defecto.
@@ -317,7 +319,7 @@ rock, el piano clásico y la electrónica, con 20~\% en el piano moderno y con
 transmisión analógica.
 
 PESQ se comporta de forma opuesta. Con 5~\% está entre 4.52 y 4.62, cerca del
-máximo de 4.64, y con 40~\% baja a valores entre 2.44 (pieza sintética) y 3.85
+máximo de 4.64, y con 40~\% baja a valores entre 2.43 (pieza sintética) y 3.86
 (voz). La pieza sintética es la que más se degrada, posiblemente porque sus
 notas puras hacen más evidente la coloración del eco, y la voz la que menos,
 porque sus pausas no se modifican. Como análisis adicional se calculó la
@@ -340,9 +342,9 @@ sí distingue entre pistas.
 
 \subsection{Tasa de transferencia}
 En la Fig.~\ref{fig:tasa}, la tasa de recuperación se mantiene en al menos
-95.8~\% hasta 83.5~bit/s, baja a valores entre 85.1 y 98.3~\% a 167~bit/s y
-queda entre 62.6 y 80.8~\% a 334~bit/s, porque con ventanas más cortas cada bit
-se decide con menos muestras. PESQ también baja, de valores entre 2.80 y 4.12 a
+95.7~\% hasta 83.5~bit/s, baja a valores entre 84.6 y 98.5~\% a 167~bit/s y
+queda entre 63.4 y 80.8~\% a 334~bit/s, porque con ventanas más cortas cada bit
+se decide con menos muestras. PESQ también baja, de valores entre 2.78 y 4.05 a
 20.9~bit/s a valores entre 1.38 y 2.91 a 334~bit/s. Con ventanas cortas el
 codificador cambia de núcleo con más frecuencia, y es posible que esos cambios
 se perciban como una degradación adicional.
@@ -360,10 +362,10 @@ recuperación en el barrido de amplitud (derecha).}
 
 \subsection{Correlación entre las métricas}
 La tasa de recuperación y PESQ tienen una correlación negativa (gráfica derecha
-de la Fig.~\ref{fig:tasa}), con $r=-0.75$ en conjunto y entre $-0.75$ y
-$-0.93$ dentro de cada pista. Es decir, lo que hace más robusto al sistema
+de la Fig.~\ref{fig:tasa}), con $r=-0.75$ en conjunto y entre $-0.76$ y
+$-0.92$ dentro de cada pista. Es decir, lo que hace más robusto al sistema
 también hace más audible el eco. La tasa de transferencia se correlaciona
-negativamente con PESQ ($r=-0.66$ en conjunto y entre $-0.91$ y $-0.96$ por
+negativamente con PESQ ($r=-0.66$ en conjunto y entre $-0.92$ y $-0.96$ por
 pista) y con la tasa de recuperación ($r=-0.93$), así que aumentar la tasa
 empeora ambas. Las correlaciones en conjunto son más débiles porque cada género
 tiene su propio nivel de PESQ.
@@ -371,16 +373,15 @@ tiene su propio nivel de PESQ.
 \subsection{Discusión}
 Los resultados confirman que no es posible mejorar al mismo tiempo la robustez,
 la tasa y la calidad, y que cada género ubica ese compromiso en un punto
-distinto. Los valores por defecto cumplen la recuperación mínima, pero la
-calidad de la pieza sintética y del piano moderno es moderada. Con 30~\% de
-amplitud, todas las pistas mantendrían al menos 92.6~\% de recuperación y PESQ
-subiría entre 0.26 y 0.40, por lo que ese valor parece un mejor equilibrio. A
-83.5~bit/s la capacidad se duplicaría sin bajar de 95.8~\% de recuperación, a
-cambio de perder entre 0.26 y 0.45 de PESQ.
+distinto. Por eso los valores por defecto se eligieron como la configuración
+medida con mayor PESQ que mantiene al menos 95~\% de recuperación en todas las
+pistas, un margen sobre el mínimo de 90~\%, y que permite codificar los siete
+metadatos en 30~s. Con 30~\% de amplitud PESQ subiría entre 0.21 y 0.45, pero
+la voz bajaría a 93.4~\%. A 83.5~bit/s la capacidad se duplicaría sin bajar de
+95.7~\%, a cambio de perder entre 0.20 y 0.36 de PESQ, y con ventanas mayores el
+mensaje ya no cabe en 30~s.
 
-El componente más frágil es el protocolo de datos, porque un bit erróneo daña
-un campo completo y la detección del fin falla tanto con ventanas codificadas
-débiles como con ecos falsos. Por último, PESQ está diseñado para voz, analiza
+Por último, PESQ está diseñado para voz, analiza
 solo hasta 8~kHz y no pudo evaluar el rock, porque su detector de actividad no
 encontró segmentos válidos. Sus valores sirven para comparar configuraciones,
 pero no como medida absoluta de calidad musical.
@@ -408,9 +409,8 @@ El protocolo de datos es el punto más débil, ya que un bit erróneo o una rach
 de ventanas débiles basta para perder metadatos completos.
 
 Como trabajo futuro se recomienda agregar un código corrector de errores, un
-encabezado con la longitud del mensaje, omitir las ventanas en silencio,
-suavizar la transición entre núcleos, reducir la amplitud por defecto a 30~\%
-y validar la implementación en C++ contra el prototipo.
+encabezado con la longitud del mensaje, omitir las ventanas en silencio y
+suavizar la transición entre núcleos.
 
 % ----------------------------------------------------------------------------------------------------------------
 

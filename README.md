@@ -232,4 +232,60 @@ Entre paréntesis va el peso en la nota cuando el enunciado lo indica.
 
 ## Instalación, construcción y ejecución
 
-_Pendiente: completar cuando la implementación esté lista._
+### Requisitos
+
+- GNU/Linux con `make` y un compilador de C++17.
+- Opcional: conda o mamba. Si está instalado, `make` crea el ambiente `pds-proyecto1` desde
+  `environment.yml` y compila con su g++; si no, compila con el `g++` del sistema.
+- Para el prototipo en Python: el mismo ambiente (`conda activate pds-proyecto1`), que incluye
+  numpy, scipy, matplotlib, pesq y Jupyter.
+
+### Construcción
+
+```bash
+make          # genera cpp/build/echo_hiding
+make clean    # borra cpp/build/
+```
+
+### Ejecución
+
+Con al menos un metadato el programa codifica; sin metadatos, decodifica. Los parámetros de
+enmascaramiento y el canal deben ser los mismos al codificar y al decodificar.
+
+```bash
+# Codificar: ENTRADA.wav SALIDA.wav + metadatos
+cpp/build/echo_hiding audio/rock_indie.wav codificado.wav --title "Mi canción" --artist "Banda" --year 2026
+
+# Decodificar
+cpp/build/echo_hiding codificado.wav
+
+# Canal derecho y parámetros propios
+cpp/build/echo_hiding audio/rock_indie.wav codificado.wav --channel right --delay0 1000 --delay1 1500 \
+    --att0 40 --att1 40 --title "Mi canción"
+cpp/build/echo_hiding codificado.wav --channel right --delay0 1000 --delay1 1500
+
+# Ayuda con todas las opciones
+cpp/build/echo_hiding -h
+```
+
+Al decodificar, la salida estándar contiene solo los metadatos reconocidos:
+
+```
+Artista: Banda
+Título: Mi canción
+Año: 2026
+```
+
+Los diagnósticos (modo, ventana, porcentaje de ventanas con eco) y las advertencias por metadatos
+desconocidos van a la salida de error.
+
+### Prototipo y figuras del artículo
+
+```bash
+cd python
+jupyter nbconvert --to notebook --execute --inplace echo_hiding_poc.ipynb
+```
+
+El cuaderno corre el prototipo, la prueba de extremo a extremo y los barridos, y regenera las
+figuras de `Reporte/images/todas/`. Los archivos de prueba están en `audio/` (ver
+`audio/README.md`).
