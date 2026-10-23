@@ -49,7 +49,7 @@ Antes de la FFT, cada ventana se escala a un nivel fijo (valor eficaz 2^15) y se
 ### Caracterización (Python)
 - Prueba de extremo a extremo con los parámetros por defecto en 6 pistas de 30 s: sintética, rock, piano moderno, piano clásico, electrónica y voz (A32).
 - Barrido de amplitud (5–50 %) y de tamaño de ventana (2–32 `t_max`, 20.9–334 bit/s), con 3 repeticiones por punto. Se mide:
-  - **Tasa de recuperación** (bits correctos / bits codificados). Con los valores por defecto fue de 95.9 a 100 % (R46).
+  - **Tasa de recuperación** (bits correctos / bits codificados). Con los valores por defecto fue de 96.4 a 100 % (R46), con PESQ entre 4.29 y 4.52.
   - **PESQ** (paquete `pesq`, en `environment.yml`). Se remuestrea a 16 kHz y se usa el modo de banda ancha. PESQ está pensado para voz y no pudo evaluar la pista de rock, limitación que se discute en el artículo.
   - **Tasa de transferencia** (bit/s = `fs / L`) y **SNR** como análisis adicional.
 - Correlaciones de Pearson entre recuperación, tasa de transferencia y PESQ (A30, A31).
@@ -57,7 +57,7 @@ Antes de la FFT, cada ventana se escala a un nivel fijo (valor eficaz 2^15) y se
 ### Implementación en C++ (`cpp/`)
 - `cpp/src/main.cpp` une el CLI, el WAV, el codificador y el decodificador, con el mismo protocolo que el prototipo.
 - Lectura y escritura de WAV propias (`cpp/include/encoder/wav.hpp`). Se rechaza todo lo que no sea 44.1 kHz, PCM de 16 bits y estéreo (R25). El archivo de salida conserva el encabezado de 44 bytes (R37) y el canal no codificado queda intacto.
-- Convolución explícita ventana × `h_b` y solapamiento y suma (`cpp/include/encoder/encoder.hpp`, R34, R36). La salida se satura a int16.
+- Convolución explícita ventana × `h_b` y solapamiento y suma (`cpp/include/encoder/encoder.hpp`, R34, R36). Las ventanas se cruzan con rampas sin²/cos² de una ventana completa que suman 1, así que el cambio de núcleo es suave (R32). La salida se satura a int16.
 - `R_cc` con una FFT propia (radix-2 y Bluestein para longitudes que no son potencia de 2, `cpp/include/deco/`). Una ventana en silencio digital devuelve `R_cc` nula para coincidir con el prototipo.
 - CLI con `getopt_long` (`cpp/src/cli.cpp`): aborta ante opciones desconocidas (R7) y se queda con el último valor si una opción se repite (R9).
 - Los mensajes de diagnóstico van a `stderr`, de modo que `stdout` contiene solo los metadatos.
@@ -65,7 +65,7 @@ Antes de la FFT, cada ventana se escala a un nivel fijo (valor eficaz 2^15) y se
 - Pruebas en `cpp/tests/`: `encoder_test.cpp` (solapamiento y suma frente a convolución completa, y codificación con decodificación), `deco_test.cpp` y `cli_test.cpp`.
 
 ### Tamaño de ventana (R33, R42)
-Codificador y decodificador usan la misma regla, `L = 16 · t_max` (1056 muestras y 41.8 bit/s con los valores por defecto). El cepstro real es simétrico y periódico en `L`, así que para resolver el pico en `t_max` se necesita `t_max < L/2`, y el clasificador toma su referencia hasta `3·t_max`, lo que exige `L ≥ 6·t_max`. En los barridos, `L = 8·t_max` (83.5 bit/s) también mantuvo una recuperación ≥ 95.8 %, por lo que todavía falta justificar que 16 sea "la menor posible".
+Codificador y decodificador usan la misma regla, `L = 10 · t_max` (660 muestras, 15 ms y 66.8 bit/s con los valores por defecto). El cepstro real es simétrico y periódico en `L` y el clasificador toma su referencia hasta `3·t_max`, lo que exige `L ≥ 6·t_max`. Dentro de ese límite, 10 es el menor múltiplo que cumple PESQ ≥ 4.0 (R32) y recuperación ≥ 95 % (R46) en todas las pistas de prueba; con 9 PESQ baja de 4.0 (barrido en el artículo).
 
 ### Interfaz (CLI)
 ```
@@ -142,7 +142,7 @@ Entre paréntesis va el peso en la nota cuando el enunciado lo indica.
 
 ### Enmascaramiento (5 %)
 - [x] R17 Valores por defecto si no se especifican
-- [ ] R18 Valores por defecto = los de mejor desempeño medido
+- [x] R18 Valores por defecto = los de mejor desempeño medido
 - [x] R19 Retardos en microsegundos
 - [x] R20 Parámetro de retardo para el bit 0
 - [x] R21 Parámetro de retardo para el bit 1
@@ -160,8 +160,8 @@ Entre paréntesis va el peso en la nota cuando el enunciado lo indica.
 - [x] R29 Primer argumento posicional = WAV original (0.5)
 - [x] R30 Segundo argumento posicional = WAV destino (0.5)
 - [x] R31 Termina cuando se codifica todo el archivo (0.5)
-- [ ] R32 Con los valores por defecto, la salida es perceptualmente indistinguible (2.5)
-- [ ] R33 Ventana de menor tamaño posible según el mayor retardo (0.5)
+- [x] R32 Con los valores por defecto, la salida es perceptualmente indistinguible (2.5)
+- [x] R33 Ventana de menor tamaño posible según el mayor retardo (0.5)
 - [x] R34 Codificación por convolución con `h0`/`h1` (7.5)
 - [x] R35 / R36 Combinación por solapamiento y almacenamiento **o** solapamiento y suma (solo una) (7.5)
 - [x] R37 Encabezado WAV equivalente al original

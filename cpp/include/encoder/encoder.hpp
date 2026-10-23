@@ -62,19 +62,36 @@ inline void convolve_add(const Signal& x, std::size_t begin, std::size_t len, co
             if (offset + i + j < out.size()) out[offset + i + j] += x[begin + i] * h[j];
 }
 
-inline Signal encode(const Signal& x, const std::vector<int>& bits, const Params& p, std::size_t L) {
+// Fundido de `fade` muestras (par, <= L) centrado en cada frontera: rampas sin^2/cos^2 que suman 1, asi que con el
+// mismo nucleo en todas las ventanas el resultado es la convolucion completa. fade = 0: cambio abrupto de nucleo.
+inline Signal encode(const Signal& x, const std::vector<int>& bits, const Params& p, std::size_t L,
+                     std::size_t fade = 0) {
     if (L == 0) throw std::invalid_argument("encode: L must be > 0");
+    if (fade > L || fade % 2) throw std::invalid_argument("encode: fade must be even and <= L");
     const Signal h[2] = {kernel(p.d[0], p.a[0]), kernel(p.d[1], p.a[1])};
+    const std::size_t N = x.size(), half = fade / 2, nw = (N + L - 1) / L;
 
-    Signal y(x.size(), 0.0);   // y se trunca a len(x): la cola final se descarta
-    std::size_t k = 0;
-    for (std::size_t s = 0; s < x.size(); s += L, ++k) {
-        const std::size_t len = std::min(L, x.size() - s);
+    Signal y(N, 0.0);   // y se trunca a len(x): la cola final se descarta
+    Signal v;
+    for (std::size_t k = 0; k < nw; ++k) {
+        const std::size_t s = k * L, e = s + L;
+        const std::size_t lo = s >= half ? s - half : 0, hi = std::min(N, e + half);
+        v.assign(x.begin() + lo, x.begin() + hi);
+        for (std::size_t n = lo; n < hi && fade; ++n) {
+            if (k > 0 && n < s + half) {
+                const Real t = std::sin(deco::kPi / 2 * (static_cast<Real>(n - (s - half)) + 0.5) / static_cast<Real>(fade));
+                v[n - lo] *= t * t;
+            }
+            if (k + 1 < nw && n >= e - half) {
+                const Real t = std::cos(deco::kPi / 2 * (static_cast<Real>(n - (e - half)) + 0.5) / static_cast<Real>(fade));
+                v[n - lo] *= t * t;
+            }
+        }
         if (k < bits.size()) {
             if (bits[k] != 0 && bits[k] != 1) throw std::invalid_argument("encode: bits must be 0 or 1");
-            convolve_add(x, s, len, h[bits[k]], y, s);
+            convolve_add(v, 0, v.size(), h[bits[k]], y, lo);
         } else {
-            for (std::size_t i = 0; i < len; ++i) y[s + i] += x[s + i];
+            for (std::size_t i = 0; i < v.size(); ++i) y[lo + i] += v[i];
         }
     }
     return y;

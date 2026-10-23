@@ -28,11 +28,13 @@
 
 namespace {
 
-constexpr std::size_t WIN_MULT = 16;    // longitud de ventana = WIN_MULT * max(d) (R33, R42)
+// Longitud de ventana = WIN_MULT * max(d) (R33, R42): el menor multiplo que cumple PESQ >= 4.0 (R32) y
+// recuperacion >= 95 % (R46) en las pistas de prueba, con fundido de una ventana completa entre nucleos.
+constexpr std::size_t WIN_MULT = 10;
 constexpr std::uint32_t FS = 44100;     // formato exigido: 44.1 kHz, 16 bits, estereo (R25)
 constexpr std::size_t CHANNELS = 2;
 constexpr deco::Real THR = 3.0;         // z minimo para considerar que una ventana tiene eco (R47)
-constexpr std::size_t GAP = 8;          // ventanas sin eco seguidas que marcan el fin del mensaje
+constexpr std::size_t GAP = 13;         // ventanas sin eco seguidas que marcan el fin del mensaje (~195 ms)
 
 // Categoria que acompana a cada metadato reconocido (R49).
 const std::map<std::string, std::string> LABELS = {
@@ -95,7 +97,7 @@ int encode(const cli::Options& opt, wav::Audio& audio, const encoder::Params& p,
         throw std::runtime_error("el audio es muy corto: se necesitan " + std::to_string(bits.size()) + " + " +
                                  std::to_string(GAP) + " ventanas y solo hay " + std::to_string(capacity));
 
-    x = encoder::encode(x, bits, p, L);   // convolucion por ventanas + solapamiento y suma (R34, R36)
+    x = encoder::encode(x, bits, p, L, L);   // convolucion por ventanas + solapamiento y suma con fundido (R34, R36)
     wav::write(opt.output, audio);        // mismo formato y encabezado que la entrada (R37)
     std::fprintf(stderr, "salida   : %s (%zu bits escondidos en %zu de %zu ventanas)\n",
                  opt.output.c_str(), bits.size(), bits.size(), capacity);
