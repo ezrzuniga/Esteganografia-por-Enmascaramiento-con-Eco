@@ -134,8 +134,8 @@ Ventanas sin eco de cierre, $G$ & 8 & 191~ms \\
 \end{table}
 
 \subsection{Codificador}
-Los retardos se convierten de microsegundos a muestras con
-$t_b=\operatorname{round}(t_b^{\mu s} f_s/10^6)$. El tamaño de ventana depende
+Los retardos, dados en microsegundos, se convierten a muestras multiplicando por
+$f_s$ y redondeando al entero más cercano. El tamaño de ventana depende
 solo del mayor retardo, $L=16\,t_{\max}$, y es el mismo en ambos subsistemas.
 Cada ventana se convoluciona explícitamente con el núcleo de su bit y se combina
 con~\eqref{eq:ola}, las ventanas posteriores al mensaje se copian sin eco. La
