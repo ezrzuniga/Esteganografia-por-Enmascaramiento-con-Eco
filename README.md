@@ -115,14 +115,14 @@ Entre paréntesis va el peso en la nota cuando el enunciado lo indica.
 
 ### Generales y entrega
 - [x] R1 Prototipo en Python e implementación final en C/C++ con herramientas libres
-- [ ] R2 Todo el código fuente de autoría propia en el repositorio
+- [x] R2 Todo el código fuente de autoría propia en el repositorio
 - [x] R3 Funciona en GNU/Linux
 - [x] R4 `Makefile` que construye la aplicación
 - [x] R5 Historial de Git que demuestre el desarrollo (2.5)
 - [ ] Acceso al repositorio para `michaelgruner`
-- [ ] README con instrucciones de instalación, construcción y ejecución
+- [x] README con instrucciones de instalación, construcción y ejecución
 - [x] Archivos de prueba o instrucciones para obtenerlos
-- [x] Artículo final en PDF dentro del repositorio
+- [ ] Artículo final en PDF dentro del repositorio
 - [ ] ZIP/TAR subido a TEC Digital antes del 22/10/2026 23:59
 
 ### Parámetros
@@ -189,7 +189,7 @@ Entre paréntesis va el peso en la nota cuando el enunciado lo indica.
 
 **Forma (5 %)**
 - [x] A4 Solo palabras en español
-- [ ] A5 Siglas definidas antes de usarse
+- [x] A5 Siglas definidas antes de usarse
 - [ ] A6 Tablas, figuras y ecuaciones introducidas antes de aparecer
 - [x] A7 Nombres de tablas, figuras, etc. con mayúscula (por ejemplo, "Tabla 1")
 - [x] A8 Título debajo en todo excepto las tablas
